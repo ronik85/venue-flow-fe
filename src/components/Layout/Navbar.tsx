@@ -45,7 +45,7 @@ export default function Navbar() {
                 <span className="navbar-user-role">{user.role}</span>
               </div>
               <div className="navbar-avatar" title="Manage sessions" style={{ cursor: 'pointer' }} onClick={() => navigate('/auth/sessions')}>
-                {(user.name ?? user.email)[0].toUpperCase()}
+                {(user.name ?? user.email)[0]?.toUpperCase()}
               </div>
               <Button
                 variant="ghost"

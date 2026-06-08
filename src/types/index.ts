@@ -1,5 +1,5 @@
 /* ─── Auth ──────────────────────────────────────────────────────────────────── */
-export type UserRole = 'USER' | 'ADMIN' | 'ORGANIZER';
+export type UserRole = "USER" | "ADMIN" | "ORGANIZER";
 
 export interface User {
   id: string;
@@ -48,8 +48,24 @@ export interface Venue {
 }
 
 /* ─── Events ────────────────────────────────────────────────────────────────── */
-export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'POSTPONED' | 'COMPLETED';
-export type EventSeatStatus = 'AVAILABLE' | 'LOCKED' | 'BOOKED';
+export type EventStatus =
+  | "DRAFT"
+  | "PUBLISHED"
+  | "CANCELLED"
+  | "POSTPONED"
+  | "COMPLETED";
+export type EventSeatStatus = "AVAILABLE" | "LOCKED" | "BOOKED";
+
+/** Payload emitted by the backend on the `seat:update` WebSocket event */
+export interface SeatStatusChange {
+  id: string;
+  status: EventSeatStatus;
+}
+
+export interface SeatUpdatePayload {
+  eventId: string;
+  seats: SeatStatusChange[];
+}
 
 export interface EventSeat {
   id: string;
@@ -75,7 +91,7 @@ export interface VenueEvent {
 }
 
 /* ─── Bookings ──────────────────────────────────────────────────────────────── */
-export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
+export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "EXPIRED";
 
 export interface BookingItem {
   id: string;

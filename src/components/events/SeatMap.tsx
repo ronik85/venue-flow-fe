@@ -6,6 +6,7 @@ interface Props {
   selectedSeats: string[];
   onToggleSeat: (seatId: string) => void;
   disabled?: boolean;
+  liveUpdatedSeatIds?: Set<string>;
 }
 
 interface TooltipData {
@@ -14,7 +15,7 @@ interface TooltipData {
   y: number;
 }
 
-export default function SeatMap({ seats, selectedSeats, onToggleSeat, disabled }: Props) {
+export default function SeatMap({ seats, selectedSeats, onToggleSeat, disabled, liveUpdatedSeatIds }: Props) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [hoveredSeat, setHoveredSeat] = useState<string | null>(null);
 
@@ -102,7 +103,13 @@ export default function SeatMap({ seats, selectedSeats, onToggleSeat, disabled }
                       return (
                         <div
                           key={seat.id}
-                          className={`seatmap-seat ${getStatusClass(seat)}`}
+                          className={[
+                            'seatmap-seat',
+                            getStatusClass(seat),
+                            liveUpdatedSeatIds?.has(seat.id) ? 'seatmap-seat-live' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
                           style={{ animationDelay: `${rowIdx * 40 + seatIdx * 15}ms` }}
                           onClick={() => canSelect && onToggleSeat(seat.id)}
                           data-selectable={canSelect}
@@ -122,6 +129,18 @@ export default function SeatMap({ seats, selectedSeats, onToggleSeat, disabled }
           </div>
         );
       })}
+
+      {/* Flash animation for real-time seat updates */}
+      <style>{`
+        @keyframes seat-live-flash {
+          0%   { box-shadow: 0 0 0 0 rgba(99, 179, 237, 0.8), 0 0 0 0 rgba(99, 179, 237, 0.4); }
+          50%  { box-shadow: 0 0 0 6px rgba(99, 179, 237, 0.3), 0 0 12px 4px rgba(99, 179, 237, 0.2); }
+          100% { box-shadow: 0 0 0 0 rgba(99, 179, 237, 0); }
+        }
+        .seatmap-seat-live {
+          animation: seat-live-flash 0.6s ease-out 2 !important;
+        }
+      `}</style>
     </div>
   );
 }
