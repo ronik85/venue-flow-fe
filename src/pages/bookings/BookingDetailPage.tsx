@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBooking, confirmBooking, cancelBooking } from '../../api/bookings';
-import { ArrowLeft, CheckCircle, XCircle, Clock, Calendar, Armchair } from 'lucide-react';
+import { downloadTicketPdf } from '../../api/tickets';
+import {
+  ArrowLeft, CheckCircle, XCircle, Clock, Calendar, Armchair,
+  Ticket, Download, QrCode, CheckCircle2,
+} from 'lucide-react';
 import Button from '../../components/ui/Button';
 import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -13,6 +17,7 @@ export default function BookingDetailPage() {
   const navigate = useNavigate();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   const fetchBooking = async () => {
     try { const res = await getBooking(id!); setBooking(res.data.data || res.data); }
@@ -33,14 +38,32 @@ export default function BookingDetailPage() {
     catch (err: any) { toast.error(err.response?.data?.message || 'Cancel failed'); }
   };
 
-  const formatDate = (d?: string) => d ? new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadTicketPdf(id!, `ticket-${booking?.ticketNumber ?? id}.pdf`);
+      toast.success('PDF downloaded!');
+    } catch { toast.error('Failed to generate PDF'); }
+    finally { setDownloading(false); }
+  };
+
+  const formatDate = (d?: string) =>
+    d ? new Date(d).toLocaleDateString('en-IN', {
+      weekday: 'short', month: 'short', day: 'numeric',
+      year: 'numeric', hour: '2-digit', minute: '2-digit',
+    }) : '—';
 
   if (loading) return <LoadingSpinner />;
   if (!booking) return null;
 
+  const hasTicket = booking.status === 'CONFIRMED' && booking.ticketNumber;
+
   return (
     <div className="page animate-fade-in">
-      <Button variant="ghost" size="sm" onClick={() => navigate('/bookings/me')} style={{ marginBottom: 16 }}><ArrowLeft size={16} /> Back to bookings</Button>
+      <Button variant="ghost" size="sm" onClick={() => navigate('/bookings/me')} style={{ marginBottom: 16 }}>
+        <ArrowLeft size={16} /> Back to bookings
+      </Button>
+
       <div className="detail-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
@@ -48,16 +71,59 @@ export default function BookingDetailPage() {
             <h1 className="detail-title">Booking #{booking.id.slice(0, 8)}</h1>
             <div className="detail-meta" style={{ marginTop: 12 }}>
               <span className="detail-meta-item"><Calendar size={16} /> Created {formatDate(booking.createdAt)}</span>
-              {booking.expiresAt && booking.status === 'PENDING' && <span className="detail-meta-item" style={{ color: 'var(--warning)' }}><Clock size={16} /> Expires {formatDate(booking.expiresAt)}</span>}
+              {booking.expiresAt && booking.status === 'PENDING' &&
+                <span className="detail-meta-item" style={{ color: 'var(--warning)' }}><Clock size={16} /> Expires {formatDate(booking.expiresAt)}</span>}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {booking.status === 'PENDING' && (<><Button onClick={handleConfirm}><CheckCircle size={16} /> Confirm Booking</Button><Button variant="danger" onClick={handleCancel}><XCircle size={16} /> Cancel</Button></>)}
             {booking.status === 'CONFIRMED' && <Button variant="danger" onClick={handleCancel}><XCircle size={16} /> Cancel Booking</Button>}
           </div>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+
+      {/* Ticket Panel — visible only for CONFIRMED bookings that have been issued a ticket */}
+      {hasTicket && (
+        <div className="ticket-panel animate-fade-in">
+          <div className="ticket-panel-accent" />
+          <div className="ticket-panel-body">
+            <div className="ticket-panel-left">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <Ticket size={18} style={{ color: 'var(--accent-400)' }} />
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Digital Ticket
+                </span>
+              </div>
+              <div className="ticket-panel-number">{booking.ticketNumber}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+                {booking.ticketStatus && <StatusBadge status={booking.ticketStatus} />}
+                {booking.checkedInAt && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--success)' }}>
+                    <CheckCircle2 size={13} /> Checked in {formatDate(booking.checkedInAt)}
+                  </span>
+                )}
+              </div>
+              {booking.qrPayload && (
+                <div className="ticket-qr-chip">
+                  <QrCode size={12} />
+                  <span>{booking.qrPayload}</span>
+                </div>
+              )}
+            </div>
+            <div className="ticket-panel-actions">
+              <Button variant="secondary" size="sm" onClick={() => navigate(`/tickets/${id}`)}>
+                <Ticket size={14} /> View Ticket
+              </Button>
+              <Button variant="secondary" size="sm" onClick={handleDownload} loading={downloading}>
+                <Download size={14} /> Download PDF
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event + Seats grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
         <div className="card">
           <h3 style={{ marginBottom: 16 }}>Event Details</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -86,6 +152,7 @@ export default function BookingDetailPage() {
           </div>
         </div>
       </div>
+
       {booking.cancellationReason && (
         <div className="card" style={{ marginTop: 24, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
           <h4 style={{ color: 'var(--danger)', marginBottom: 8 }}>Cancellation Reason</h4>

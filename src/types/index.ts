@@ -92,6 +92,7 @@ export interface VenueEvent {
 
 /* ─── Bookings ──────────────────────────────────────────────────────────────── */
 export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "EXPIRED";
+export type TicketStatus = "ACTIVE" | "USED" | "CANCELLED";
 
 export interface BookingItem {
   id: string;
@@ -114,6 +115,50 @@ export interface Booking {
   user?: User;
   items?: BookingItem[];
   createdAt: string;
+  // Ticket fields (populated after CONFIRMED)
+  ticketNumber?: string;
+  qrPayload?: string;
+  ticketStatus?: TicketStatus;
+  issuedAt?: string;
+  checkedInAt?: string;
+}
+
+/* ─── Ticket Details (GET /tickets/:bookingId response shape) ───────────────── */
+export interface TicketSeat {
+  bookingItemId: string;
+  priceAtBooking: string;
+  seat: {
+    id: string;
+    row: string;
+    seatNumber: string;
+    section: { id: string; name: string } | null;
+  } | null;
+}
+
+export interface TicketDetails {
+  ticketNumber: string | null;
+  ticketStatus: TicketStatus | null;
+  qrPayload: string | null;
+  issuedAt: string | null;
+  checkedInAt: string | null;
+  booking: {
+    id: string;
+    status: BookingStatus;
+    totalAmount: string;
+    createdAt: string;
+  };
+  customer: {
+    id: string;
+    name?: string;
+    email: string;
+  };
+  event: {
+    id: string;
+    title: string;
+    startTime: string;
+    venue: { id: string; name: string; address?: string } | null;
+  };
+  seats: TicketSeat[];
 }
 
 /* ─── API Responses ─────────────────────────────────────────────────────────── */

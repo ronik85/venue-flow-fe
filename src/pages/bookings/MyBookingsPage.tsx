@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyBookings, confirmBooking, cancelBooking } from '../../api/bookings';
-import { Ticket, CheckCircle, XCircle } from 'lucide-react';
+import { Ticket, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Pagination from '../../components/ui/Pagination';
@@ -69,7 +69,7 @@ export default function MyBookingsPage() {
                   <StatusBadge status={booking.status} />
                   <div className="list-item-actions" onClick={(e) => e.stopPropagation()}>
                     {booking.status === 'PENDING' && (<><Button variant="primary" size="sm" onClick={() => handleConfirm(booking.id)}><CheckCircle size={14} /> Confirm</Button><Button variant="danger" size="sm" onClick={() => handleCancel(booking.id)}><XCircle size={14} /></Button></>)}
-                    {booking.status === 'CONFIRMED' && <Button variant="danger" size="sm" onClick={() => handleCancel(booking.id)}><XCircle size={14} /> Cancel</Button>}
+                    {booking.status === 'CONFIRMED' && (<><Button variant="secondary" size="sm" onClick={() => navigate(`/tickets/${booking.id}`)}><ExternalLink size={14} /> Ticket</Button><Button variant="danger" size="sm" onClick={() => handleCancel(booking.id)}><XCircle size={14} /> Cancel</Button></>)}
                   </div>
                 </div>
               </div>

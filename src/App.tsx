@@ -21,6 +21,9 @@ import MyBookingsPage from "./pages/bookings/MyBookingsPage";
 import BookingDetailPage from "./pages/bookings/BookingDetailPage";
 import AdminBookingsPage from "./pages/bookings/AdminBookingsPage";
 
+import TicketDetailPage from "./pages/tickets/TicketDetailPage";
+import VerifyTicketPage from "./pages/tickets/VerifyTicketPage";
+
 export default function App() {
   return (
     <Routes>
@@ -71,6 +74,25 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Ticket routes */}
+        <Route
+          path="/tickets/:bookingId"
+          element={
+            <ProtectedRoute>
+              <TicketDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/verify"
+          element={
+            <ProtectedRoute roles={["ADMIN", "ORGANIZER"]}>
+              <VerifyTicketPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/auth/sessions"
           element={

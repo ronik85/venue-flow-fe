@@ -1,10 +1,10 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Zap, Calendar, MapPin, Ticket, LogOut, Shield, MonitorSmartphone } from 'lucide-react';
+import { Zap, Calendar, MapPin, Ticket, LogOut, Shield, MonitorSmartphone, ScanLine } from 'lucide-react';
 import Button from '../ui/Button';
 
 export default function Navbar() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isPrivileged } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -29,6 +29,11 @@ export default function Navbar() {
           {user && (
             <NavLink to="/bookings/me" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
               <Ticket size={16} /> My Bookings
+            </NavLink>
+          )}
+          {isPrivileged && (
+            <NavLink to="/tickets/verify" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+              <ScanLine size={16} /> Verify Ticket
             </NavLink>
           )}
           {isAdmin && (
