@@ -70,7 +70,7 @@ export function useEventSeats(
 
       socket.emit("join:event", {
         eventId,
-      });
+      }); 
     });
 
     socket.on("disconnect", () => {
